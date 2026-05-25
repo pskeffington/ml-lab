@@ -1,0 +1,38 @@
+name: DOI Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  doi-verification:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev]
+
+      - name: Run DOI pipeline
+        run: python scripts/run_doi_pipeline.py --config citation_pipeline.json --strict
+
+      - name: Upload DOI reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: doi-verification-reports
+          path: |
+            reports/generated/doi_verification_report.md
+            reports/generated/doi_verification_report.csv
+            reports/generated/doi_verification_summary.json
