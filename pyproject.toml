@@ -1,7 +1,7 @@
 [project]
 name = "ml-lab"
 version = "0.1.0"
-description = "Adaptive machine-learning scaffolding research lab"
+description = "Science-abstract ML system for auditable learning and citation-integrity research"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -27,6 +27,8 @@ dev = [
 [project.scripts]
 ml-lab-run = "ml_lab.experiments.runner:main"
 ml-lab-analyze = "ml_lab.evaluation.metrics:main"
+ml-lab-audit-template = "ml_lab.audit.cli:template_main"
+ml-lab-audit-analyze = "ml_lab.audit.cli:analyze_main"
 
 [build-system]
 requires = ["hatchling"]
