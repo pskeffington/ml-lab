@@ -2,11 +2,19 @@
 
 Adaptive machine-learning scaffolding research lab for studying learning under cognitive load.
 
+**Maintainer:** Paul Skeffington, MS, MPH  
+**Repository status:** active synthetic-workflow research scaffold; generated outputs validate software plumbing and should not be interpreted as empirical learning-effect evidence.  
+**Last documentation refresh:** 2026-05-26
+
 ## Overview
 
 `ml-lab` is a reproducible research sandbox for testing whether adaptive machine-learning scaffolds improve learning outcomes when learners face cognitively demanding tasks. The project frames instructional support as a policy problem: learner state is observed, a scaffold action is selected, and downstream learning outcomes are measured.
 
 The initial study compares adaptive scaffolding against static scaffolding, unguided LLM assistance, and a no-AI control condition. The intended outcomes are durable learning, transfer, metacognitive calibration, and reduced hint dependency.
+
+## Current update — 2026-05-26
+
+The repository now supports a minimal four-arm synthetic workflow that runs from simulated learner events through arm-level summaries and pairwise comparisons. The immediate documentation boundary is that synthetic outputs validate object interfaces, logging assumptions, policy behavior, and analysis plumbing only; they are not evidence of real learning effectiveness.
 
 ## Current status
 
