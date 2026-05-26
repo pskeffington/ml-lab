@@ -19,7 +19,7 @@ class ScaffoldPolicy(ABC):
 
 @dataclass(frozen=True, slots=True)
 class RuleBasedScaffoldPolicy(ScaffoldPolicy):
-    """Transparent baseline policy for early experiments and tests."""
+    """Transparent adaptive baseline policy for early experiments and tests."""
 
     high_support_threshold: float = 0.5
     calibration_threshold: float = 0.3
@@ -47,4 +47,35 @@ class RuleBasedScaffoldPolicy(ScaffoldPolicy):
             name="continue",
             description="Allow the learner to continue without additional support.",
             intensity=0.0,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class StaticScaffoldPolicy(ScaffoldPolicy):
+    """Non-adaptive scaffold policy that always returns the same support action."""
+
+    action_name: str = "static_hint"
+    action_description: str = "Provide the same scaffold regardless of learner state."
+    intensity: float = 0.4
+
+    def select_action(self, state: LearnerState) -> ScaffoldAction:
+        return ScaffoldAction(
+            name=self.action_name,
+            description=self.action_description,
+            intensity=self.intensity,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class UnguidedLLMPolicy(ScaffoldPolicy):
+    """Simple proxy for unrestricted LLM assistance in synthetic experiments."""
+
+    intensity: float = 0.7
+
+    def select_action(self, state: LearnerState) -> ScaffoldAction:
+        return ScaffoldAction(
+            name="unguided_llm_help",
+            description="Simulate unstructured LLM assistance without scaffold constraints.",
+            intensity=self.intensity,
+            metadata={"structured": False},
         )
