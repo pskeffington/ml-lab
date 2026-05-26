@@ -8,6 +8,16 @@ Adaptive machine-learning scaffolding research lab for studying learning under c
 
 The initial study compares adaptive scaffolding against static scaffolding, unguided LLM assistance, and a no-AI control condition. The intended outcomes are durable learning, transfer, metacognitive calibration, and reduced hint dependency.
 
+## Current status
+
+The repository supports a minimal four-arm synthetic workflow:
+
+```text
+simulate learner events -> export event log -> summarize by arm -> compute pairwise comparisons
+```
+
+Synthetic output is useful for validating object interfaces, logging assumptions, policy behavior, and analysis plumbing. It should not be interpreted as evidence of real learning effectiveness.
+
 ## Working title
 
 **Adaptive Machine-Learning Scaffolding for Learning Under Cognitive Load**
@@ -25,40 +35,44 @@ Does adaptive ML-driven scaffolding improve learning transfer and metacognitive 
 | Unguided LLM assistance | Learners may use LLM help without structured scaffold controls. | Tests whether unrestricted AI help supports durable learning or creates dependency. |
 | No-AI control | Learners complete tasks without AI-mediated support. | Establishes a baseline comparison. |
 
-## Core outcomes
-
-- **Durable learning:** delayed post-test performance after the initial learning task.
-- **Transfer:** performance on related but non-identical tasks.
-- **Metacognitive calibration:** alignment between confidence and observed performance.
-- **Hint dependency:** frequency, timing, and depth of support-seeking behavior.
-
 ## Repository map
 
 ```text
-src/ml_lab/        Python package for learner state, scaffold policies, experiments, and evaluation
-docs/              Research design notes, literature matrix, and paper-development materials
-tests/             Unit tests for core objects, policies, and metrics
-scripts/           Reproducible command-line experiment and analysis entry points
-notebooks/         Exploratory demonstrations, diagnostics, and result inspection
+src/ml_lab/core/          Learner state, scaffold actions, policies, arms, and outcome metrics
+src/ml_lab/experiments/   Synthetic task environment, learners, and experiment runner
+src/ml_lab/evaluation/    Arm summaries, pairwise comparisons, and CSV analysis utilities
+docs/                     Research design, workflow, pre-analysis, and literature documentation
+tests/                    Unit tests for core objects, experiment running, and evaluation
+outputs/                  Generated synthetic event logs and summaries, created locally
 ```
 
-## Planned object model
-
-The implementation should remain small, modular, and testable.
+## Implemented object model
 
 ```text
-LearnerState        Current representation of performance, confidence, latency, errors, and help use
-ScaffoldPolicy      Rule-based or learned policy that selects the next support action
-ScaffoldAction      Hint, prompt, worked example, reflection cue, or other intervention
-TaskEnvironment     Problem sequence, feedback rules, task metadata, and assessment timing
-ExperimentArm       Assignment condition connecting policies, task rules, and logging behavior
-OutcomeMetric       Reusable metric object for learning, transfer, calibration, and dependency
-ExperimentRunner    Reproducible orchestration layer for simulation or empirical trials
+LearnerState              Performance, confidence, latency, errors, and help use
+ScaffoldAction            Hint, prompt, worked example, reflection cue, or other intervention
+ScaffoldPolicy            Interface for policies that select support actions
+RuleBasedScaffoldPolicy   Transparent adaptive baseline policy
+StaticScaffoldPolicy      Non-adaptive comparison policy
+UnguidedLLMPolicy         Synthetic proxy for unrestricted LLM assistance
+TaskEnvironment           Ordered task sequence for synthetic experiments
+SyntheticLearner          Synthetic learner with skill and confidence parameters
+ExperimentArm             Assignment condition connecting policies and logging behavior
+ExperimentRunner          Reproducible orchestration layer for synthetic trials
+ArmSummary                Arm-level descriptive summary
+PairwiseComparison        Mean differences and Cohen's d between arms
 ```
 
-## Documentation
+## Documentation spine
 
-Start with [`docs/README.md`](docs/README.md) for the documentation index. The core design document is [`docs/research_design.md`](docs/research_design.md).
+Start with [`docs/README.md`](docs/README.md). Key documents:
+
+- [`docs/research_design.md`](docs/research_design.md)
+- [`docs/researcher_guide.md`](docs/researcher_guide.md)
+- [`docs/synthetic_workflow.md`](docs/synthetic_workflow.md)
+- [`docs/pre_analysis_plan.md`](docs/pre_analysis_plan.md)
+- [`docs/literature_matrix.md`](docs/literature_matrix.md)
+- [`docs/roadmap.md`](docs/roadmap.md)
 
 ## Local setup
 
@@ -70,12 +84,23 @@ cd ml-lab
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 ```
 
-When package metadata is added, install the project in editable mode:
+## Run the synthetic workflow
 
 ```bash
-python -m pip install -e .
+ml-lab-run
+ml-lab-analyze
+python -m pytest
+```
+
+Expected local outputs:
+
+```text
+outputs/synthetic_event_log.csv
+outputs/arm_summary.csv
+outputs/pairwise_comparisons.csv
 ```
 
 ## Development workflow
@@ -83,16 +108,12 @@ python -m pip install -e .
 Use short-lived Git branches and clear commits.
 
 ```bash
-git checkout -b docs-polish
-git add README.md docs/
-git commit -m "Polish project documentation"
-git push origin docs-polish
-```
-
-Before merging implementation work, run the test suite once tests are available:
-
-```bash
-python -m pytest
+git checkout -b feature/descriptive-name
+git status
+git diff
+git add <files>
+git commit -m "Describe the focused change"
+git push origin feature/descriptive-name
 ```
 
 ## Reproducibility principles
@@ -100,7 +121,8 @@ python -m pytest
 - Keep research decisions documented before they are encoded in experiments.
 - Promote exploratory notebook logic into scripts before treating results as final.
 - Preserve random seeds, configuration files, and generated outputs needed to reproduce findings.
-- Keep learner-state, scaffold-policy, and outcome-metric objects independently testable.
+- Keep learner-state, scaffold-policy, experiment-runner, and outcome-metric objects independently testable.
+- Distinguish synthetic workflow validation from empirical learning claims.
 
 ## Authorship
 
