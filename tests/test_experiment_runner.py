@@ -7,7 +7,7 @@ import csv
 import pytest
 
 from ml_lab.experiments import ExperimentRunner, TaskEnvironment
-from ml_lab.experiments.runner import build_default_runner
+from ml_lab.experiments.runner import ExperimentConfig, build_default_arms, build_default_runner
 
 
 def test_default_runner_produces_expected_number_of_events() -> None:
@@ -15,7 +15,7 @@ def test_default_runner_produces_expected_number_of_events() -> None:
 
     events = runner.run(learners_per_arm=3)
 
-    assert len(events) == 2 * 3 * 4
+    assert len(events) == 4 * 3 * 4
     assert set(events[0]) == {
         "learner_id",
         "arm",
@@ -28,7 +28,20 @@ def test_default_runner_produces_expected_number_of_events() -> None:
         "hint_count",
         "selected_action",
         "action_intensity",
+        "support_intensity_next",
+        "learner_skill",
     }
+
+
+def test_default_arms_match_research_design_conditions() -> None:
+    arms = build_default_arms()
+
+    assert [arm.name for arm in arms] == [
+        "adaptive_ml_scaffold",
+        "static_scaffold",
+        "unguided_llm_assistance",
+        "no_ai_control",
+    ]
 
 
 def test_runner_is_deterministic_under_fixed_seed() -> None:
@@ -41,6 +54,11 @@ def test_runner_is_deterministic_under_fixed_seed() -> None:
 def test_task_environment_requires_tasks() -> None:
     with pytest.raises(ValueError, match="task_ids"):
         TaskEnvironment(task_ids=())
+
+
+def test_experiment_config_requires_positive_learners() -> None:
+    with pytest.raises(ValueError, match="learners_per_arm"):
+        ExperimentConfig(learners_per_arm=0)
 
 
 def test_runner_requires_positive_learners_per_arm() -> None:
