@@ -1,12 +1,46 @@
 # Contributing
 
-This repository is maintained as a working project. Contributions should be small, focused, and easy to review.
+This repository is an active research codebase. Contributions should keep the project reproducible, modular, and aligned with the adaptive scaffolding study design.
 
-Before making changes:
+## Workflow
 
-- Read the README and existing project notes.
-- Preserve the current repository structure unless a change is clearly needed.
+Create a short-lived branch for each focused change.
+
+```bash
+git checkout -b feature/descriptive-name
+```
+
+Before committing, review the changed files and keep commits focused.
+
+```bash
+git status
+git diff
+git add <files>
+git commit -m "Describe the focused change"
+```
+
+## Code standards
+
+- Keep objects small and testable.
+- Separate learner state, scaffold policies, task environments, and outcome metrics.
+- Prefer explicit configuration over hidden defaults.
+- Keep source files and generated outputs separate.
 - Do not commit secrets, credentials, private data, local exports, or generated build artifacts.
-- Keep source files and generated outputs separate when possible.
+- Promote stable notebook logic into scripts or package modules.
 
-For code or document changes, run the relevant local checks when available and mention any checks that could not be run. For larger changes, open an issue or pull request with a short summary of the motivation and expected impact.
+## Documentation standards
+
+- Document research decisions before encoding them in experiments.
+- Define constructs before operationalizing them.
+- Keep method notes tied to code objects under `src/ml_lab/`.
+- Update `docs/research_design.md` when experimental assumptions change.
+
+## Testing
+
+When tests are available, run:
+
+```bash
+python -m pytest
+```
+
+New implementation work should include focused tests for the object, policy, or metric being added. For code or document changes, mention any checks that could not be run.
