@@ -6,9 +6,18 @@ This directory contains the working documentation for the `ml-lab` research proj
 
 - [`research_design.md`](research_design.md): Core study framing, hypotheses, experimental arms, measures, and implementation plan.
 - [`researcher_guide.md`](researcher_guide.md): Practical orientation for ML researchers who want to extend, simulate, or evaluate the project.
+- [`synthetic_workflow.md`](synthetic_workflow.md): Instructions for running the four-arm synthetic experiment and analysis workflow.
+- [`pre_analysis_plan.md`](pre_analysis_plan.md): Template for planned outcomes, comparisons, model specifications, exclusions, and interpretation boundaries.
+- [`literature_matrix.md`](literature_matrix.md): Construct-to-source matrix for linking prior research to implementation and study-design decisions.
 - [`roadmap.md`](roadmap.md): Phased development plan organized by research utility.
-- Future literature matrix: Annotated sources and construct mapping for adaptive scaffolding, cognitive load, learning transfer, metacognition, and LLM-assisted learning.
-- Future analysis plan: Pre-analysis decisions, model specifications, robustness checks, and reporting standards.
+
+## Recommended reading order
+
+1. Read [`research_design.md`](research_design.md) to understand the study frame.
+2. Read [`researcher_guide.md`](researcher_guide.md) to understand how the codebase is meant to be extended.
+3. Run the workflow in [`synthetic_workflow.md`](synthetic_workflow.md).
+4. Review [`pre_analysis_plan.md`](pre_analysis_plan.md) before interpreting outputs.
+5. Use [`literature_matrix.md`](literature_matrix.md) to connect claims to evidence and implementation choices.
 
 ## Documentation principles
 
