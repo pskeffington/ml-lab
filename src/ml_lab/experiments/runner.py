@@ -7,7 +7,14 @@ import random
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ml_lab.core import ExperimentArm, LearnerState, RuleBasedScaffoldPolicy, ScaffoldAction
+from ml_lab.core import (
+    ExperimentArm,
+    LearnerState,
+    RuleBasedScaffoldPolicy,
+    ScaffoldAction,
+    StaticScaffoldPolicy,
+    UnguidedLLMPolicy,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,6 +24,21 @@ class TaskEnvironment:
     task_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
+        if not self.task_ids:
+            raise ValueError("task_ids must not be empty")
+
+
+@dataclass(frozen=True, slots=True)
+class ExperimentConfig:
+    """Configuration for a synthetic scaffold experiment."""
+
+    learners_per_arm: int = 5
+    seed: int = 7
+    task_ids: tuple[str, ...] = ("task-1", "task-2", "task-3", "task-4")
+
+    def __post_init__(self) -> None:
+        if self.learners_per_arm < 1:
+            raise ValueError("learners_per_arm must be positive")
         if not self.task_ids:
             raise ValueError("task_ids must not be empty")
 
@@ -36,10 +58,10 @@ class SyntheticLearner:
         if not -1.0 <= self.confidence_bias <= 1.0:
             raise ValueError("confidence_bias must be between -1.0 and 1.0")
 
-    def attempt_task(self, task_id: str, hint_count: int = 0) -> LearnerState:
+    def attempt_task(self, task_id: str, support_intensity: float = 0.0) -> LearnerState:
         """Generate a learner-state observation for one task attempt."""
 
-        support_bonus = min(hint_count * 0.08, 0.24)
+        support_bonus = min(max(support_intensity, 0.0), 1.0) * 0.18
         correctness_probability = min(max(self.skill + support_bonus, 0.0), 1.0)
         correctness = 1.0 if self.rng.random() < correctness_probability else 0.0
         confidence_noise = self.rng.uniform(-0.1, 0.1)
@@ -52,7 +74,8 @@ class SyntheticLearner:
             correctness=correctness,
             confidence=confidence,
             latency_seconds=latency_seconds,
-            hint_count=hint_count,
+            hint_count=0,
+            metadata={"skill": self.skill, "support_intensity": support_intensity},
         )
 
 
@@ -96,12 +119,16 @@ class ExperimentRunner:
         learner: SyntheticLearner,
     ) -> list[dict[str, str | int | float]]:
         records: list[dict[str, str | int | float]] = []
-        hint_count = 0
+        support_intensity = 0.0
+        cumulative_hint_count = 0
 
         for step, task_id in enumerate(self.environment.task_ids, start=1):
-            state = learner.attempt_task(task_id=task_id, hint_count=hint_count)
+            state = learner.attempt_task(task_id=task_id, support_intensity=support_intensity)
             action = self._select_action(arm=arm, state=state)
-            hint_count = self._next_hint_count(hint_count=hint_count, action=action)
+            cumulative_hint_count = self._next_hint_count(
+                hint_count=cumulative_hint_count,
+                action=action,
+            )
             records.append(
                 {
                     "learner_id": state.learner_id,
@@ -112,11 +139,14 @@ class ExperimentRunner:
                     "confidence": state.confidence,
                     "calibration_error": state.calibration_error,
                     "latency_seconds": state.latency_seconds,
-                    "hint_count": state.hint_count,
+                    "hint_count": cumulative_hint_count,
                     "selected_action": action.name,
                     "action_intensity": action.intensity,
+                    "support_intensity_next": action.intensity,
+                    "learner_skill": float(state.metadata["skill"]),
                 }
             )
+            support_intensity = action.intensity
 
         return records
 
@@ -132,7 +162,7 @@ class ExperimentRunner:
 
     @staticmethod
     def _next_hint_count(hint_count: int, action: ScaffoldAction) -> int:
-        if action.name in {"worked_example", "strategic_hint", "reflection_prompt"}:
+        if action.intensity > 0:
             return hint_count + 1
         return hint_count
 
@@ -150,37 +180,64 @@ class ExperimentRunner:
             writer.writerows(events)
 
 
+def build_default_arms() -> tuple[ExperimentArm, ...]:
+    """Build the four default experimental arms from the research design."""
+
+    return (
+        ExperimentArm(
+            name="adaptive_ml_scaffold",
+            description="Rule-based adaptive scaffold baseline.",
+            policy=RuleBasedScaffoldPolicy(),
+            uses_ai=True,
+            adaptive=True,
+        ),
+        ExperimentArm(
+            name="static_scaffold",
+            description="Non-adaptive scaffold with constant support.",
+            policy=StaticScaffoldPolicy(),
+            uses_ai=False,
+            adaptive=False,
+        ),
+        ExperimentArm(
+            name="unguided_llm_assistance",
+            description="Proxy for unrestricted LLM help without scaffold constraints.",
+            policy=UnguidedLLMPolicy(),
+            uses_ai=True,
+            adaptive=False,
+        ),
+        ExperimentArm(
+            name="no_ai_control",
+            description="Unsupported baseline condition.",
+            policy=None,
+            uses_ai=False,
+            adaptive=False,
+        ),
+    )
+
+
 def build_default_runner(seed: int = 7) -> ExperimentRunner:
     """Build the default synthetic experiment runner."""
 
-    adaptive_policy = RuleBasedScaffoldPolicy()
+    config = ExperimentConfig(seed=seed)
+    return build_runner_from_config(config)
+
+
+def build_runner_from_config(config: ExperimentConfig) -> ExperimentRunner:
+    """Build a runner from an experiment configuration."""
+
     return ExperimentRunner(
-        environment=TaskEnvironment(task_ids=("task-1", "task-2", "task-3", "task-4")),
-        arms=(
-            ExperimentArm(
-                name="adaptive_ml_scaffold",
-                description="Rule-based adaptive scaffold baseline.",
-                policy=adaptive_policy,
-                uses_ai=True,
-                adaptive=True,
-            ),
-            ExperimentArm(
-                name="no_ai_control",
-                description="Unsupported baseline condition.",
-                policy=None,
-                uses_ai=False,
-                adaptive=False,
-            ),
-        ),
-        seed=seed,
+        environment=TaskEnvironment(task_ids=config.task_ids),
+        arms=build_default_arms(),
+        seed=config.seed,
     )
 
 
 def main() -> None:
     """Run a small synthetic experiment and export the event log."""
 
-    runner = build_default_runner()
-    events = runner.run(learners_per_arm=5)
+    config = ExperimentConfig()
+    runner = build_runner_from_config(config)
+    events = runner.run(learners_per_arm=config.learners_per_arm)
     output_path = Path("outputs/synthetic_event_log.csv")
     runner.write_csv(events=events, path=output_path)
     print(f"Wrote {len(events)} events to {output_path}")
