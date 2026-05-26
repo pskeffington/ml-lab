@@ -15,7 +15,12 @@ def test_summarize_by_arm_returns_one_summary_per_arm() -> None:
 
     summaries = summarize_by_arm(events)
 
-    assert [summary.arm for summary in summaries] == ["adaptive_ml_scaffold", "no_ai_control"]
+    assert [summary.arm for summary in summaries] == [
+        "adaptive_ml_scaffold",
+        "no_ai_control",
+        "static_scaffold",
+        "unguided_llm_assistance",
+    ]
     assert all(summary.n_events == 8 for summary in summaries)
     assert all(0.0 <= summary.mean_correctness <= 1.0 for summary in summaries)
     assert all(0.0 <= summary.mean_calibration_error <= 1.0 for summary in summaries)
@@ -55,7 +60,7 @@ def test_summary_csv_round_trip(tmp_path) -> None:
     with summary_path.open(newline="", encoding="utf-8") as file:
         rows = list(csv.DictReader(file))
 
-    assert len(rows) == 2
+    assert len(rows) == 4
     assert set(rows[0]) == {
         "arm",
         "n_events",
