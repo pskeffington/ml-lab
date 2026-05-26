@@ -9,6 +9,7 @@ This directory contains the working documentation for the `ml-lab` research proj
 - [`synthetic_workflow.md`](synthetic_workflow.md): Instructions for running the four-arm synthetic experiment and analysis workflow.
 - [`pre_analysis_plan.md`](pre_analysis_plan.md): Template for planned outcomes, comparisons, model specifications, exclusions, and interpretation boundaries.
 - [`literature_matrix.md`](literature_matrix.md): Construct-to-source matrix for linking prior research to implementation and study-design decisions.
+- [`evidence_roadmap.md`](evidence_roadmap.md): Publication-oriented evidence ladder, milestones, claim boundaries, and next artifacts.
 - [`roadmap.md`](roadmap.md): Phased development plan organized by research utility.
 
 ## Recommended reading order
@@ -18,6 +19,7 @@ This directory contains the working documentation for the `ml-lab` research proj
 3. Run the workflow in [`synthetic_workflow.md`](synthetic_workflow.md).
 4. Review [`pre_analysis_plan.md`](pre_analysis_plan.md) before interpreting outputs.
 5. Use [`literature_matrix.md`](literature_matrix.md) to connect claims to evidence and implementation choices.
+6. Use [`evidence_roadmap.md`](evidence_roadmap.md) to decide which publication claims are currently supportable.
 
 ## Documentation principles
 
