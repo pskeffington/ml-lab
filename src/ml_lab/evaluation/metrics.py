@@ -23,7 +23,7 @@ _NUMERIC_FIELDS = (
 
 @dataclass(frozen=True, slots=True)
 class ArmSummary:
-    """Aggregate summary for one experimental arm."""
+    """Aggregate event-level summary for one experimental arm."""
 
     arm: str
     n_events: int
@@ -45,6 +45,76 @@ class ArmSummary:
             "mean_calibration_error": self.mean_calibration_error,
             "mean_latency_seconds": self.mean_latency_seconds,
             "mean_hint_count": self.mean_hint_count,
+            "mean_action_intensity": self.mean_action_intensity,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LearnerSummary:
+    """Aggregate learner-level outcome summary within one experimental arm."""
+
+    learner_id: str
+    arm: str
+    n_events: int
+    mean_correctness: float
+    final_correctness: float
+    mean_confidence: float
+    final_confidence: float
+    mean_calibration_error: float
+    final_calibration_error: float
+    mean_latency_seconds: float
+    total_hints: int
+    mean_action_intensity: float
+
+    def as_dict(self) -> dict[str, str | int | float]:
+        """Return a CSV-friendly dictionary representation."""
+
+        return {
+            "learner_id": self.learner_id,
+            "arm": self.arm,
+            "n_events": self.n_events,
+            "mean_correctness": self.mean_correctness,
+            "final_correctness": self.final_correctness,
+            "mean_confidence": self.mean_confidence,
+            "final_confidence": self.final_confidence,
+            "mean_calibration_error": self.mean_calibration_error,
+            "final_calibration_error": self.final_calibration_error,
+            "mean_latency_seconds": self.mean_latency_seconds,
+            "total_hints": self.total_hints,
+            "mean_action_intensity": self.mean_action_intensity,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LearnerArmSummary:
+    """Arm-level summary computed from learner-level summaries."""
+
+    arm: str
+    n_learners: int
+    mean_correctness: float
+    mean_final_correctness: float
+    mean_confidence: float
+    mean_final_confidence: float
+    mean_calibration_error: float
+    mean_final_calibration_error: float
+    mean_latency_seconds: float
+    mean_total_hints: float
+    mean_action_intensity: float
+
+    def as_dict(self) -> dict[str, str | int | float]:
+        """Return a CSV-friendly dictionary representation."""
+
+        return {
+            "arm": self.arm,
+            "n_learners": self.n_learners,
+            "mean_correctness": self.mean_correctness,
+            "mean_final_correctness": self.mean_final_correctness,
+            "mean_confidence": self.mean_confidence,
+            "mean_final_confidence": self.mean_final_confidence,
+            "mean_calibration_error": self.mean_calibration_error,
+            "mean_final_calibration_error": self.mean_final_calibration_error,
+            "mean_latency_seconds": self.mean_latency_seconds,
+            "mean_total_hints": self.mean_total_hints,
             "mean_action_intensity": self.mean_action_intensity,
         }
 
@@ -80,6 +150,46 @@ def summarize_by_arm(events: Iterable[dict[str, str | int | float]]) -> list[Arm
 
     grouped = _group_by_arm(events)
     return [_summarize_group(arm=arm, rows=rows) for arm, rows in sorted(grouped.items())]
+
+
+def summarize_by_learner(events: Iterable[dict[str, str | int | float]]) -> list[LearnerSummary]:
+    """Summarize event-level experiment records by learner within arm."""
+
+    grouped = _group_by_learner(events)
+    return [
+        _summarize_learner(learner_id=learner_id, rows=rows)
+        for learner_id, rows in sorted(grouped.items())
+    ]
+
+
+def summarize_learners_by_arm(
+    learner_summaries: Iterable[LearnerSummary],
+) -> list[LearnerArmSummary]:
+    """Summarize learner-level records by experimental arm."""
+
+    grouped: dict[str, list[LearnerSummary]] = defaultdict(list)
+    for summary in learner_summaries:
+        grouped[summary.arm].append(summary)
+
+    if not grouped:
+        raise ValueError("learner_summaries must not be empty")
+
+    return [
+        _summarize_learner_arm(arm=arm, summaries=summaries)
+        for arm, summaries in sorted(grouped.items())
+    ]
+
+
+def summarize_event_log_by_learner(path: str | Path) -> list[LearnerSummary]:
+    """Load a CSV event log and summarize it by learner within arm."""
+
+    return summarize_by_learner(_read_event_log(path))
+
+
+def summarize_event_log_learners_by_arm(path: str | Path) -> list[LearnerArmSummary]:
+    """Load a CSV event log and summarize learner-level outcomes by arm."""
+
+    return summarize_learners_by_arm(summarize_event_log_by_learner(path))
 
 
 def compare_arms(
@@ -132,6 +242,21 @@ def write_summary_csv(summaries: Iterable[ArmSummary], path: str | Path) -> None
     _write_dicts([summary.as_dict() for summary in summaries], path, "summaries")
 
 
+def write_learner_summary_csv(summaries: Iterable[LearnerSummary], path: str | Path) -> None:
+    """Write learner-level summaries to CSV."""
+
+    _write_dicts([summary.as_dict() for summary in summaries], path, "learner summaries")
+
+
+def write_learner_arm_summary_csv(
+    summaries: Iterable[LearnerArmSummary],
+    path: str | Path,
+) -> None:
+    """Write learner-level arm summaries to CSV."""
+
+    _write_dicts([summary.as_dict() for summary in summaries], path, "learner arm summaries")
+
+
 def write_comparison_csv(comparisons: Iterable[PairwiseComparison], path: str | Path) -> None:
     """Write pairwise comparisons to CSV."""
 
@@ -171,6 +296,23 @@ def _group_by_arm(
     return grouped
 
 
+def _group_by_learner(
+    events: Iterable[dict[str, str | int | float]],
+) -> dict[str, list[dict[str, str | int | float]]]:
+    grouped: dict[str, list[dict[str, str | int | float]]] = defaultdict(list)
+    for event in events:
+        learner_id = str(event.get("learner_id", "")).strip()
+        if not learner_id:
+            raise ValueError("each event must include a non-empty learner_id")
+        if not str(event.get("arm", "")).strip():
+            raise ValueError("each event must include a non-empty arm")
+        grouped[learner_id].append(event)
+
+    if not grouped:
+        raise ValueError("events must not be empty")
+    return grouped
+
+
 def _summarize_group(arm: str, rows: list[dict[str, str | int | float]]) -> ArmSummary:
     return ArmSummary(
         arm=arm,
@@ -182,6 +324,66 @@ def _summarize_group(arm: str, rows: list[dict[str, str | int | float]]) -> ArmS
         mean_hint_count=_mean(rows, "hint_count"),
         mean_action_intensity=_mean(rows, "action_intensity"),
     )
+
+
+def _summarize_learner(learner_id: str, rows: list[dict[str, str | int | float]]) -> LearnerSummary:
+    ordered_rows = _sort_rows_by_step(rows)
+    arm = _single_arm_for_learner(learner_id, ordered_rows)
+    final_row = ordered_rows[-1]
+    return LearnerSummary(
+        learner_id=learner_id,
+        arm=arm,
+        n_events=len(ordered_rows),
+        mean_correctness=_mean(ordered_rows, "correctness"),
+        final_correctness=float(final_row["correctness"]),
+        mean_confidence=_mean(ordered_rows, "confidence"),
+        final_confidence=float(final_row["confidence"]),
+        mean_calibration_error=_mean(ordered_rows, "calibration_error"),
+        final_calibration_error=float(final_row["calibration_error"]),
+        mean_latency_seconds=_mean(ordered_rows, "latency_seconds"),
+        total_hints=int(float(final_row["hint_count"])),
+        mean_action_intensity=_mean(ordered_rows, "action_intensity"),
+    )
+
+
+def _summarize_learner_arm(arm: str, summaries: list[LearnerSummary]) -> LearnerArmSummary:
+    return LearnerArmSummary(
+        arm=arm,
+        n_learners=len(summaries),
+        mean_correctness=fmean(summary.mean_correctness for summary in summaries),
+        mean_final_correctness=fmean(summary.final_correctness for summary in summaries),
+        mean_confidence=fmean(summary.mean_confidence for summary in summaries),
+        mean_final_confidence=fmean(summary.final_confidence for summary in summaries),
+        mean_calibration_error=fmean(summary.mean_calibration_error for summary in summaries),
+        mean_final_calibration_error=fmean(
+            summary.final_calibration_error for summary in summaries
+        ),
+        mean_latency_seconds=fmean(summary.mean_latency_seconds for summary in summaries),
+        mean_total_hints=fmean(summary.total_hints for summary in summaries),
+        mean_action_intensity=fmean(summary.mean_action_intensity for summary in summaries),
+    )
+
+
+def _sort_rows_by_step(
+    rows: list[dict[str, str | int | float]],
+) -> list[dict[str, str | int | float]]:
+    if not rows:
+        raise ValueError("learner rows must not be empty")
+    if all("step" in row for row in rows):
+        return sorted(rows, key=lambda row: int(float(row["step"])))
+    return rows
+
+
+def _single_arm_for_learner(
+    learner_id: str,
+    rows: list[dict[str, str | int | float]],
+) -> str:
+    arms = {str(row.get("arm", "")).strip() for row in rows}
+    if "" in arms:
+        raise ValueError("each event must include a non-empty arm")
+    if len(arms) != 1:
+        raise ValueError(f"learner {learner_id} appears in multiple arms")
+    return next(iter(arms))
 
 
 def _mean(rows: list[dict[str, str | int | float]], field: str) -> float:
