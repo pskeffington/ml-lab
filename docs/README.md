@@ -5,6 +5,7 @@ This directory contains the working documentation for the `ml-lab` research proj
 ## Contents
 
 - [`research_design.md`](research_design.md): Core study framing, hypotheses, experimental arms, measures, and implementation plan.
+- [`repo_tracks.md`](repo_tracks.md): Architecture boundary between the adaptive scaffolding simulation track and the citation-integrity audit workflow track.
 - [`researcher_guide.md`](researcher_guide.md): Practical orientation for ML researchers who want to extend, simulate, or evaluate the project.
 - [`synthetic_workflow.md`](synthetic_workflow.md): Instructions for running the four-arm synthetic experiment and analysis workflow.
 - [`pre_analysis_plan.md`](pre_analysis_plan.md): Template for planned outcomes, comparisons, model specifications, exclusions, and interpretation boundaries.
@@ -15,11 +16,12 @@ This directory contains the working documentation for the `ml-lab` research proj
 ## Recommended reading order
 
 1. Read [`research_design.md`](research_design.md) to understand the study frame.
-2. Read [`researcher_guide.md`](researcher_guide.md) to understand how the codebase is meant to be extended.
-3. Run the workflow in [`synthetic_workflow.md`](synthetic_workflow.md).
-4. Review [`pre_analysis_plan.md`](pre_analysis_plan.md) before interpreting outputs.
-5. Use [`literature_matrix.md`](literature_matrix.md) to connect claims to evidence and implementation choices.
-6. Use [`evidence_roadmap.md`](evidence_roadmap.md) to decide which publication claims are currently supportable.
+2. Read [`repo_tracks.md`](repo_tracks.md) to understand the two active research/workflow tracks.
+3. Read [`researcher_guide.md`](researcher_guide.md) to understand how the codebase is meant to be extended.
+4. Run the workflow in [`synthetic_workflow.md`](synthetic_workflow.md).
+5. Review [`pre_analysis_plan.md`](pre_analysis_plan.md) before interpreting outputs.
+6. Use [`literature_matrix.md`](literature_matrix.md) to connect claims to evidence and implementation choices.
+7. Use [`evidence_roadmap.md`](evidence_roadmap.md) to decide which publication claims are currently supportable.
 
 ## Documentation principles
 
