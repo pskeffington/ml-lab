@@ -3,8 +3,16 @@
 Adaptive machine-learning scaffolding research lab for studying learning under cognitive load.
 
 **Maintainer:** Paul Skeffington, MS, MPH  
-**Repository status:** active synthetic-workflow research scaffold; generated outputs validate software plumbing and should not be interpreted as empirical learning-effect evidence.  
-**Last documentation refresh:** 2026-05-26
+**Repository status:** early-stage proposed research study; materials are in proposal drafting and pre-pilot infrastructure development. Generated outputs validate software plumbing only and should not be interpreted as empirical learning-effect evidence.  
+**Last documentation refresh:** 2026-05-29
+
+## Project status note
+
+`ml-lab` is an early-stage proposed research study. The current repository materials support proposal drafting, research-design development, synthetic workflow validation, and pre-pilot planning. The repository does not yet represent a completed study, validated empirical system, or proven intervention.
+
+Any outputs produced at this stage should be treated as draft planning artifacts or engineering validation artifacts unless and until a formal empirical study design, governance pathway, data collection process, and analysis plan are approved and executed.
+
+Public-facing language should describe the project as a proposed study, early drafting effort, pre-pilot research scaffold, or synthetic validation workflow rather than as completed empirical evidence.
 
 ## Overview
 
@@ -12,9 +20,11 @@ Adaptive machine-learning scaffolding research lab for studying learning under c
 
 The initial study compares adaptive scaffolding against static scaffolding, unguided LLM assistance, and a no-AI control condition. The intended outcomes are durable learning, transfer, metacognitive calibration, and reduced hint dependency.
 
-## Current update — 2026-05-26
+## Current update — 2026-05-29
 
-The repository now supports a minimal four-arm synthetic workflow that runs from simulated learner events through arm-level summaries and pairwise comparisons. The immediate documentation boundary is that synthetic outputs validate object interfaces, logging assumptions, policy behavior, and analysis plumbing only; they are not evidence of real learning effectiveness.
+The repository supports a minimal four-arm synthetic workflow that runs from simulated learner events through arm-level summaries and pairwise comparisons. The immediate documentation boundary is that synthetic outputs validate object interfaces, logging assumptions, policy behavior, and analysis plumbing only; they are not evidence of real learning effectiveness.
+
+The repository also contains a separate citation-integrity audit workflow that is being developed as a pilot-facing research track. The two tracks are related by their shared emphasis on auditable ML-assisted research workflows, but they should not be interpreted as one completed empirical study.
 
 ## Current status
 
@@ -49,8 +59,9 @@ Does adaptive ML-driven scaffolding improve learning transfer and metacognitive 
 src/ml_lab/core/          Learner state, scaffold actions, policies, arms, and outcome metrics
 src/ml_lab/experiments/   Synthetic task environment, learners, and experiment runner
 src/ml_lab/evaluation/    Arm summaries, pairwise comparisons, and CSV analysis utilities
+src/ml_lab/audit/         Citation-integrity audit records, CSV I/O, metrics, and CLI commands
 docs/                     Research design, workflow, pre-analysis, and literature documentation
-tests/                    Unit tests for core objects, experiment running, and evaluation
+tests/                    Unit tests for core objects, experiment running, evaluation, and audit workflow
 outputs/                  Generated synthetic event logs and summaries, created locally
 ```
 
@@ -76,11 +87,15 @@ PairwiseComparison        Mean differences and Cohen's d between arms
 Start with [`docs/README.md`](docs/README.md). Key documents:
 
 - [`docs/research_design.md`](docs/research_design.md)
+- [`docs/repo_tracks.md`](docs/repo_tracks.md)
 - [`docs/researcher_guide.md`](docs/researcher_guide.md)
 - [`docs/synthetic_workflow.md`](docs/synthetic_workflow.md)
 - [`docs/pre_analysis_plan.md`](docs/pre_analysis_plan.md)
 - [`docs/literature_matrix.md`](docs/literature_matrix.md)
+- [`docs/evidence_roadmap.md`](docs/evidence_roadmap.md)
 - [`docs/roadmap.md`](docs/roadmap.md)
+- [`docs/pilot_protocol.md`](docs/pilot_protocol.md)
+- [`docs/data_dictionary.md`](docs/data_dictionary.md)
 
 ## Local setup
 
@@ -111,6 +126,20 @@ outputs/arm_summary.csv
 outputs/pairwise_comparisons.csv
 ```
 
+## Run the citation-audit workflow
+
+```bash
+ml-lab-audit-template
+ml-lab-audit-analyze
+python -m pytest
+```
+
+Expected local output:
+
+```text
+outputs/citation_audit_summary.csv
+```
+
 ## Development workflow
 
 Use short-lived Git branches and clear commits.
@@ -130,7 +159,8 @@ git push origin feature/descriptive-name
 - Promote exploratory notebook logic into scripts before treating results as final.
 - Preserve random seeds, configuration files, and generated outputs needed to reproduce findings.
 - Keep learner-state, scaffold-policy, experiment-runner, and outcome-metric objects independently testable.
-- Distinguish synthetic workflow validation from empirical learning claims.
+- Distinguish synthetic workflow validation, pilot feasibility evidence, and empirical study claims.
+- Do not commit identifiable human-subject data, private documents, restricted source materials, or non-public participant records.
 
 ## Authorship
 
